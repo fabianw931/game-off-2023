@@ -149,10 +149,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f33ab3cb2f2aa76fad7fbf944f15218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startRoom: {fileID: 11400000, guid: b953b1eca3ba77ae6bb9132f8ecbb15b, type: 2}
   rooms:
-  - {fileID: 11400000, guid: b953b1eca3ba77ae6bb9132f8ecbb15b, type: 2}
   - {fileID: 11400000, guid: 7ed5d58406433a027ba21d9cfc3c8345, type: 2}
   - {fileID: 11400000, guid: b7b9e10ed73f22f5f9e7b232222135fa, type: 2}
+  numberOfRooms: 5
 --- !u!4 &1334335251
 Transform:
   m_ObjectHideFlags: 0
@@ -180,6 +181,7 @@ GameObject:
   - component: {fileID: 1888275731}
   - component: {fileID: 1888275730}
   - component: {fileID: 1888275733}
+  - component: {fileID: 1888275734}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -230,7 +232,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 7.8055553
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -305,6 +307,30 @@ MonoBehaviour:
     mipBias: 0
     varianceClampScale: 0.9
     contrastAdaptiveSharpening: 0
+--- !u!114 &1888275734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888275729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c88f5cead0c0b2a4eb05b5900433f8d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 1
+  m_AssetsPPU: 27
+  m_RefResolutionX: 480
+  m_RefResolutionY: 270
+  m_CropFrame: 0
+  m_GridSnapping: 1
+  m_FilterMode: 0
+  m_UpscaleRT: 0
+  m_PixelSnapping: 0
+  m_CropFrameX: 0
+  m_CropFrameY: 0
+  m_StretchFill: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

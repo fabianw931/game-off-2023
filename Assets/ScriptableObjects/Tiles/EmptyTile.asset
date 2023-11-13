@@ -17,4 +17,4 @@ MonoBehaviour:
   isFloor: 1
   isSpawn: 0
   isItemSpawn: 0
-  sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
+  sprite: {fileID: -8124360940044689040, guid: 849fec8a23e4970e993a8124aa827d9f, type: 3}
