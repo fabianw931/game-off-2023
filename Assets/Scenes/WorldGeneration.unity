@@ -149,7 +149,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f33ab3cb2f2aa76fad7fbf944f15218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startRoom: {fileID: 11400000, guid: b953b1eca3ba77ae6bb9132f8ecbb15b, type: 2}
+  startRoomLayout: {fileID: 11400000, guid: b953b1eca3ba77ae6bb9132f8ecbb15b, type: 2}
+  bossRooms:
+  - {fileID: 11400000, guid: b953b1eca3ba77ae6bb9132f8ecbb15b, type: 2}
   rooms:
   - {fileID: 11400000, guid: 7ed5d58406433a027ba21d9cfc3c8345, type: 2}
   - {fileID: 11400000, guid: b7b9e10ed73f22f5f9e7b232222135fa, type: 2}

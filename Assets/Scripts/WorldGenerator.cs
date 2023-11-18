@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Room;
+using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 internal struct PlacedRoomInformation
 {
@@ -11,8 +14,8 @@ internal struct PlacedRoomInformation
 
 public class WorldGenerator : MonoBehaviour
 {
-    private static int _maxWorldSize;
-    
+    private const int MaxWorldSize = 10;
+
     [SerializeField] private RoomLayout startRoomLayout;
     [SerializeField] private List<RoomLayout> bossRooms;
     [SerializeField] private List<RoomLayout> rooms;
@@ -20,7 +23,7 @@ public class WorldGenerator : MonoBehaviour
     
     private readonly Stack<RoomLayout> _roomsToPlace = new();
     private readonly List<PlacedRoomInformation> _placedRooms = new();
-    private readonly GameObject[,] _worldMap = new GameObject[_maxWorldSize, _maxWorldSize];
+    private readonly GameObject[,] _worldMap = new GameObject[MaxWorldSize, MaxWorldSize];
     
     // Start is called before the first frame update
     void Start()
@@ -37,7 +40,7 @@ public class WorldGenerator : MonoBehaviour
         {
             int randomIndex = Random.Range(0, rooms.Count);
             RoomLayout r = rooms[randomIndex];
-            _roomsToPlace.Push(r);
+            _roomsToPlace.Push(Instantiate(r));
         }
         _roomsToPlace.Push(startRoomLayout);
     }
@@ -49,33 +52,95 @@ public class WorldGenerator : MonoBehaviour
 
     private void PlaceGameRooms()
     {
-        PlaceStartRoom();
-        while (_roomsToPlace.Count > 1)
+        PlaceStartRoom(_roomsToPlace.Pop(), -4, 2);
+        while (_roomsToPlace.Count > 0)
         {
-            RoomLayout roomLayout = _roomsToPlace.Pop();
-            Direction emptyDirection = Direction.None;
-            RoomLayout adjacentRoomLayout = null;
-            while (emptyDirection == Direction.None)
-            {
-                adjacentRoomLayout = AdjacentRoom();
-                // emptyDirection = adjacentRoomLayout.GetRandomEmptyNeighborDirection();
-            }
-            // if (adjacentRoomLayout != null) adjacentRoomLayout.Neighbors[emptyDirection] = roomLayout;
-            
-            InstantiateRoom(roomLayout);
-
             // get room from rooms to place
-            // get random other room
-            // get empty space from other room
-            // place room in empty space
-            // add room to placed rooms
-            // add room to world map array
-            // set room active
-            // set room position
+            GameObject roomGo = InstantiateRoom(_roomsToPlace.Pop());
             
+            // get random other room
+            PlacedRoomInformation adjacentRoomInfo = _placedRooms[Random.Range(0, _placedRooms.Count)];
+            RoomComponent adjacentRoomComponent = adjacentRoomInfo.Room.GetComponent<RoomComponent>() ?? throw new System.Exception("Room is null");
+            
+            // get empty space from other room
+            Direction placeDirection = adjacentRoomComponent.GetRandomEmptyNeighborDirection();
+
+            // place room in empty space
+            adjacentRoomComponent.Neighbors[placeDirection] = roomGo.GetComponent<RoomComponent>().RoomLayout;
+            roomGo.GetComponent<RoomComponent>().Neighbors[DirectionHelper.GetOppositeDirection(placeDirection)] = adjacentRoomComponent.RoomLayout;
+            
+            
+            // add room to world map array
+            // only set one of them because shift only one direction
+            var x = adjacentRoomInfo.x;
+            var y = adjacentRoomInfo.y;
+            
+            switch (placeDirection)
+            {
+                case Direction.North:
+                case Direction.South:
+                    y = DirectionHelper.GetYValue(y, placeDirection);
+                    break;
+                case Direction.East:
+                case Direction.West:
+                    x = DirectionHelper.GetXValue(x, placeDirection);
+                    break;
+                case Direction.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+ 
+            _worldMap[x, y] = roomGo;
+            
+            // set room position
+            var transformX = adjacentRoomInfo.Room.transform.position.x;
+            var transformY = adjacentRoomInfo.Room.transform.position.y;
+            
+            switch (placeDirection)
+            {
+                case Direction.North:
+                case Direction.South:
+                    transformY = DirectionHelper.GetYValueTransform(transformY, placeDirection);
+                    break;
+                case Direction.East:
+                case Direction.West:
+                    transformX = DirectionHelper.GetXValueTransform(transformX, placeDirection);
+                    break;
+                case Direction.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
+            roomGo.transform.position = new Vector3(transformX, transformY, 0);
+            
+            // set room active
+            roomGo.SetActive(true);
+            
+            // add room to placed rooms
+            _placedRooms.Add(new PlacedRoomInformation
+            {
+                Room = roomGo,
+                x = x,
+                y = y
+            });
+            
+
+            // RoomLayout roomLayout = _roomsToPlace.Pop();
+            // InstantiateRoom(roomLayout);
+            // Direction emptyDirection = Direction.None;
+            // RoomLayout adjacentRoomLayout = null;
+            // while (emptyDirection == Direction.None)
+            // {
+            //     adjacentRoomLayout = AdjacentRoom();
+            //     
+            //     // emptyDirection = adjacentRoomLayout.GetRandomEmptyNeighborDirection();
+            // }
 
         }
-        PlaceBossRoom();
+        
+        // PlaceBossRoom();
     }
 
     private RoomLayout AdjacentRoom()
@@ -87,32 +152,35 @@ public class WorldGenerator : MonoBehaviour
 
     private void PlaceBossRoom()
     {
-        throw new System.NotImplementedException();
+        // TODO throw new System.NotImplementedException();
     }
 
-    private void PlaceStartRoom()
+    private void PlaceStartRoom(RoomLayout roomLayout, float transformX, float transformY)
     {
-        RoomLayout roomLayout = _roomsToPlace.Pop();
         GameObject roomGo = InstantiateRoom(roomLayout);
-        roomGo.transform.position = new Vector3(0, 0, 0);
+        roomGo.AddComponent<RoomComponent>();
+        roomGo.GetComponent<RoomComponent>().RoomLayout = roomLayout;
+        roomGo.transform.position = new Vector3(transformX, transformY, 0);
         roomGo.SetActive(true);
-        int x = Random.Range(0, _maxWorldSize);
-        int y = Random.Range(0, _maxWorldSize);
+        int x = Random.Range(0, MaxWorldSize);
+        int y = Random.Range(0, MaxWorldSize);
         _worldMap[x, y] = roomGo;
         _placedRooms.Add(new PlacedRoomInformation { Room = roomGo, x = x, y = y });
     }
     
-    private GameObject InstantiateRoom(RoomLayout layout)
+    private GameObject InstantiateRoom(RoomLayout roomLayout)
     {
-        GameObject room = new GameObject(name);
+        GameObject room = new GameObject(roomLayout.name);
         room.SetActive(false);
         room.AddComponent<RoomComponent>();
+        room.GetComponent<RoomComponent>().RoomLayout = roomLayout;
+        
         for (int i = 0; i < RoomLayout.RoomHeight; i++)
         {
             for (int j = 0; j < RoomLayout.RoomWidth; j++)
             {
                 int currentIndex = (i * RoomLayout.RoomWidth + j);
-                GameObject tile = new GameObject(layout.Tiles[currentIndex].name)
+                GameObject tile = new GameObject(roomLayout.Tiles[currentIndex].name)
                 {
                     transform =
                     {
@@ -121,10 +189,85 @@ public class WorldGenerator : MonoBehaviour
                     }
                 };
                 SpriteRenderer spriteRenderer = tile.AddComponent<SpriteRenderer>();
-                spriteRenderer.sprite = layout.Tiles[currentIndex].Sprite;
+                spriteRenderer.sprite = roomLayout.Tiles[currentIndex].Sprite;
             }
         }
         return room;
     }
     
+}
+
+internal class DirectionHelper
+{
+    public static Direction GetOppositeDirection(Direction emptyDirection)
+    {
+        return emptyDirection switch
+        {
+            Direction.North => Direction.South,
+            Direction.East => Direction.West,
+            Direction.South => Direction.North,
+            Direction.West => Direction.East,
+            _ => Direction.None
+        };
+    }
+    
+    public static int GetUnitsToPlaceInDirection(Direction direction)
+    {
+        return direction switch
+        {
+            Direction.North => RoomLayout.RoomHeight,
+            Direction.East => RoomLayout.RoomWidth,
+            Direction.South => RoomLayout.RoomHeight,
+            Direction.West => RoomLayout.RoomWidth,
+            _ => 0
+        };
+    }
+
+    public static int GetXValue(int i, Direction placeDirection)
+    {
+        return placeDirection switch
+        {
+            Direction.North => i,
+            Direction.East => i + 1,
+            Direction.South => i,
+            Direction.West => i - 1,
+            _ => 0
+        };
+    }
+
+    public static int GetYValue(int i, Direction placeDirection)
+    {
+        return placeDirection switch
+        {
+            Direction.North => i + 1,
+            Direction.East => i,
+            Direction.South => i - 1,
+            Direction.West => i,
+            _ => 0
+        };
+    }
+    
+    public static float GetXValueTransform(float i, Direction placeDirection)
+    {
+        return placeDirection switch
+        {
+            Direction.North => i,
+            Direction.East => i + RoomLayout.RoomWidth,
+            Direction.South => i,
+            Direction.West => i - RoomLayout.RoomWidth,
+            _ => 0
+        };
+    }
+    
+    public static float GetYValueTransform(float i, Direction placeDirection)
+    {
+        return placeDirection switch
+        {
+            Direction.North => i + RoomLayout.RoomHeight,
+            Direction.East => i,
+            Direction.South => i - RoomLayout.RoomHeight,
+            Direction.West => i,
+            _ => 0
+        };
+    }
 }
