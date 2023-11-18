@@ -13,7 +13,10 @@ internal struct PlacedRoomInformation
 
 public class WorldGenerator : MonoBehaviour
 {
-    private const int MaxWorldSize = 10;
+    // set high value to avoid out of bounds exceptions
+    private const int MaxWorldSize = 100;
+    // set start room to 50 because we want to start in the middle of the world
+    private const int startRoom = 50;
 
     [SerializeField] private RoomLayout startRoomLayout;
     [SerializeField] private List<RoomLayout> bossRooms;
@@ -145,10 +148,8 @@ public class WorldGenerator : MonoBehaviour
         roomGo.GetComponent<RoomComponent>().RoomLayout = roomLayout;
         roomGo.transform.position = new Vector3(transformX, transformY, 0);
         roomGo.SetActive(true);
-        int x = Random.Range(0, MaxWorldSize);
-        int y = Random.Range(0, MaxWorldSize);
-        _worldMap[x, y] = roomGo;
-        _placedRooms.Add(new PlacedRoomInformation { Room = roomGo, x = x, y = y });
+        _worldMap[startRoom, startRoom] = roomGo;
+        _placedRooms.Add(new PlacedRoomInformation { Room = roomGo, x = startRoom, y = startRoom });
     }
     
     private GameObject InstantiateRoom(RoomLayout roomLayout)
