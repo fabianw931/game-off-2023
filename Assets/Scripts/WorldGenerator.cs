@@ -54,6 +54,7 @@ public class WorldGenerator : MonoBehaviour
 
     private void PlaceGameRooms()
     {
+        // start room coordinates correspond to middle of camera
         PlaceStartRoom(_roomsToPlace.Pop(), -4, 2);
         while (_roomsToPlace.Count > 0)
         {
@@ -71,58 +72,15 @@ public class WorldGenerator : MonoBehaviour
             adjacentRoomComponent.Neighbors[placeDirection] = roomGo.GetComponent<RoomComponent>();
             roomGo.GetComponent<RoomComponent>().Neighbors[DirectionHelper.GetOppositeDirection(placeDirection)] = adjacentRoomComponent;
             
-            // add room to world map array
-            // only set one of them because shift only one direction
             var x = adjacentRoomInfo.x;
             var y = adjacentRoomInfo.y;
             
-            switch (placeDirection)
-            {
-                case Direction.North:
-                case Direction.South:
-                    y = DirectionHelper.GetYValue(y, placeDirection);
-                    break;
-                case Direction.East:
-                case Direction.West:
-                    x = DirectionHelper.GetXValue(x, placeDirection);
-                    break;
-                case Direction.None:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
- 
-            _worldMap[x, y] = roomGo;
-            
-            // set remaining neighbors
-            setNeighbors(roomGo, x, y);
-            
-            // set room position
-            var transformX = adjacentRoomInfo.Room.transform.position.x;
-            var transformY = adjacentRoomInfo.Room.transform.position.y;
-            
-            switch (placeDirection)
-            {
-                case Direction.North:
-                case Direction.South:
-                    transformY = DirectionHelper.GetYValueTransform(transformY, placeDirection);
-                    break;
-                case Direction.East:
-                case Direction.West:
-                    transformX = DirectionHelper.GetXValueTransform(transformX, placeDirection);
-                    break;
-                case Direction.None:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            
-            roomGo.transform.position = new Vector3(transformX, transformY, 0);
-            
-            // set room active
+            SetRoomToWorldMap(placeDirection, roomGo, y: ref y, x: ref x);
+            SetNeighbors(roomGo, x, y);
+            SetRoomTransform(adjacentRoomInfo, placeDirection, roomGo);
+
             roomGo.SetActive(true);
             
-            // add room to placed rooms
             _placedRooms.Add(new PlacedRoomInformation
             {
                 Room = roomGo,
@@ -132,7 +90,61 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
-    private void setNeighbors(GameObject roomGo, int x, int y)
+    private void SetRoomToWorldMap(
+        Direction placeDirection, 
+        GameObject roomGo, 
+        ref int y, 
+        ref int x
+        )
+    {
+        switch (placeDirection)
+        {
+            case Direction.North:
+            case Direction.South:
+                y = DirectionHelper.GetYValue(y, placeDirection);
+                break;
+            case Direction.East:
+            case Direction.West:
+                x = DirectionHelper.GetXValue(x, placeDirection);
+                break;
+            case Direction.None:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        _worldMap[x, y] = roomGo;
+    }
+
+    private static void SetRoomTransform(
+        PlacedRoomInformation adjacentRoomInfo, 
+        Direction placeDirection,
+        GameObject roomGo
+        )
+    {
+        var transformX = adjacentRoomInfo.Room.transform.position.x;
+        var transformY = adjacentRoomInfo.Room.transform.position.y;
+            
+        switch (placeDirection)
+        {
+            case Direction.North:
+            case Direction.South:
+                transformY = DirectionHelper.GetYValueTransform(transformY, placeDirection);
+                break;
+            case Direction.East:
+            case Direction.West:
+                transformX = DirectionHelper.GetXValueTransform(transformX, placeDirection);
+                break;
+            case Direction.None:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+            
+        roomGo.transform.position = new Vector3(transformX, transformY, 0);
+    }
+
+    private void SetNeighbors(GameObject roomGo, int x, int y)
     {
         RoomComponent roomComponent = roomGo.GetComponent<RoomComponent>() ?? throw new Exception("Room is null");
         roomComponent.Neighbors[Direction.North] = _worldMap[x, y + 1]?.GetComponent<RoomComponent>();
@@ -163,7 +175,7 @@ public class WorldGenerator : MonoBehaviour
         {
             for (int j = 0; j < RoomLayout.RoomWidth; j++)
             {
-                int currentIndex = (i * RoomLayout.RoomWidth + j);
+                int currentIndex = i * RoomLayout.RoomWidth + j;
                 GameObject tile = new GameObject(roomLayout.Tiles[currentIndex].name)
                 {
                     transform =
@@ -181,7 +193,7 @@ public class WorldGenerator : MonoBehaviour
     
 }
 
-internal class DirectionHelper
+internal static class DirectionHelper
 {
     public static Direction GetOppositeDirection(Direction emptyDirection)
     {
@@ -192,18 +204,6 @@ internal class DirectionHelper
             Direction.South => Direction.North,
             Direction.West => Direction.East,
             _ => Direction.None
-        };
-    }
-    
-    public static int GetUnitsToPlaceInDirection(Direction direction)
-    {
-        return direction switch
-        {
-            Direction.North => RoomLayout.RoomHeight,
-            Direction.East => RoomLayout.RoomWidth,
-            Direction.South => RoomLayout.RoomHeight,
-            Direction.West => RoomLayout.RoomWidth,
-            _ => 0
         };
     }
 
