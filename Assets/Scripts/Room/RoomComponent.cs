@@ -7,7 +7,7 @@ namespace Room
     public class RoomComponent : MonoBehaviour
     {
         public RoomLayout RoomLayout { get; set; }
-        public Dictionary<Direction, RoomLayout> Neighbors { get; } = new() {
+        public Dictionary<Direction, RoomComponent> Neighbors { get; } = new() {
             {Direction.North, null},
             {Direction.East, null},
             {Direction.South, null},

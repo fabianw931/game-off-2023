@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Room;
-using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -46,7 +45,7 @@ public class WorldGenerator : MonoBehaviour
     }
 
     private void GenerateWorldMap()
-    { 
+    {
         PlaceGameRooms();
     }
 
@@ -60,15 +59,14 @@ public class WorldGenerator : MonoBehaviour
             
             // get random other room
             PlacedRoomInformation adjacentRoomInfo = _placedRooms[Random.Range(0, _placedRooms.Count)];
-            RoomComponent adjacentRoomComponent = adjacentRoomInfo.Room.GetComponent<RoomComponent>() ?? throw new System.Exception("Room is null");
+            RoomComponent adjacentRoomComponent = adjacentRoomInfo.Room.GetComponent<RoomComponent>() ?? throw new Exception("Room is null");
             
             // get empty space from other room
             Direction placeDirection = adjacentRoomComponent.GetRandomEmptyNeighborDirection();
 
             // place room in empty space
-            adjacentRoomComponent.Neighbors[placeDirection] = roomGo.GetComponent<RoomComponent>().RoomLayout;
-            roomGo.GetComponent<RoomComponent>().Neighbors[DirectionHelper.GetOppositeDirection(placeDirection)] = adjacentRoomComponent.RoomLayout;
-            
+            adjacentRoomComponent.Neighbors[placeDirection] = roomGo.GetComponent<RoomComponent>();
+            roomGo.GetComponent<RoomComponent>().Neighbors[DirectionHelper.GetOppositeDirection(placeDirection)] = adjacentRoomComponent;
             
             // add room to world map array
             // only set one of them because shift only one direction
@@ -92,6 +90,9 @@ public class WorldGenerator : MonoBehaviour
             }
  
             _worldMap[x, y] = roomGo;
+            
+            // set remaining neighbors
+            setNeighbors(roomGo, x, y);
             
             // set room position
             var transformX = adjacentRoomInfo.Room.transform.position.x;
@@ -125,34 +126,16 @@ public class WorldGenerator : MonoBehaviour
                 x = x,
                 y = y
             });
-            
-
-            // RoomLayout roomLayout = _roomsToPlace.Pop();
-            // InstantiateRoom(roomLayout);
-            // Direction emptyDirection = Direction.None;
-            // RoomLayout adjacentRoomLayout = null;
-            // while (emptyDirection == Direction.None)
-            // {
-            //     adjacentRoomLayout = AdjacentRoom();
-            //     
-            //     // emptyDirection = adjacentRoomLayout.GetRandomEmptyNeighborDirection();
-            // }
-
         }
-        
-        // PlaceBossRoom();
     }
 
-    private RoomLayout AdjacentRoom()
+    private void setNeighbors(GameObject roomGo, int x, int y)
     {
-        GameObject adjacentRoomGo = _placedRooms[Random.Range(0, _placedRooms.Count)].Room;
-        RoomLayout adjacentRoomLayout = adjacentRoomGo.GetComponent<RoomLayout>() ?? throw new System.Exception("Room is null");
-        return adjacentRoomLayout;
-    }
-
-    private void PlaceBossRoom()
-    {
-        // TODO throw new System.NotImplementedException();
+        RoomComponent roomComponent = roomGo.GetComponent<RoomComponent>() ?? throw new Exception("Room is null");
+        roomComponent.Neighbors[Direction.North] = _worldMap[x, y + 1]?.GetComponent<RoomComponent>();
+        roomComponent.Neighbors[Direction.East] = _worldMap[x + 1, y]?.GetComponent<RoomComponent>();
+        roomComponent.Neighbors[Direction.South] = _worldMap[x, y - 1]?.GetComponent<RoomComponent>();
+        roomComponent.Neighbors[Direction.West] = _worldMap[x - 1, y]?.GetComponent<RoomComponent>();
     }
 
     private void PlaceStartRoom(RoomLayout roomLayout, float transformX, float transformY)
